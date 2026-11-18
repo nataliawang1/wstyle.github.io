@@ -20,28 +20,57 @@ navLinks.forEach((link) => {
 function openLightbox(imageSrc, imageAlt) {
   const overlay = document.createElement('div');
   overlay.className = 'lightbox-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', imageAlt || 'Imagen ampliada');
 
-  overlay.innerHTML = `
-    <div class="lightbox-content">
-      <button class="lightbox-close" aria-label="Cerrar imagen">×</button>
-      <img class="lightbox-image" src="${imageSrc}" alt="${imageAlt}">
-    </div>
-  `;
+  const content = document.createElement('div');
+  content.className = 'lightbox-content';
+
+  const closeButton = document.createElement('button');
+  closeButton.className = 'lightbox-close';
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Cerrar imagen');
+  closeButton.textContent = '×';
+
+  const image = document.createElement('img');
+  image.className = 'lightbox-image';
+  image.src = imageSrc;
+  image.alt = imageAlt || 'Imagen ampliada';
+
+  content.append(closeButton, image);
+  overlay.appendChild(content);
+
+  const previousOverflow = document.body.style.overflow;
+  const previouslyFocused = document.activeElement;
+
+  function closeLightbox() {
+    overlay.remove();
+    document.body.style.overflow = previousOverflow;
+    document.removeEventListener('keydown', onKeyDown);
+
+    if (previouslyFocused instanceof HTMLElement) {
+      previouslyFocused.focus();
+    }
+  }
 
   overlay.addEventListener('click', (event) => {
-    if (event.target === overlay || event.target.classList.contains('lightbox-close')) {
-      overlay.remove();
+    if (event.target === overlay || event.target === closeButton) {
+      closeLightbox();
     }
   });
 
   document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+  closeButton.focus();
 
-  document.addEventListener('keydown', function onKeyDown(event) {
+  function onKeyDown(event) {
     if (event.key === 'Escape') {
-      overlay.remove();
-      document.removeEventListener('keydown', onKeyDown);
+      closeLightbox();
     }
-  });
+  }
+
+  document.addEventListener('keydown', onKeyDown);
 }
 
 const gallery = document.querySelector('.galeria-grid');
